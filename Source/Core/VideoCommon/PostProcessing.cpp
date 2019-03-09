@@ -17,6 +17,7 @@
 
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
+#include "Core/Movie.h"
 
 #include "VideoCommon/BPMemory.h"
 #include "VideoCommon/FramebufferManagerBase.h"
@@ -2122,6 +2123,7 @@ float2 GetTargetRectSize() { return u_target_rect.zw; }
 float4 GetViewportRect() { return u_viewport_rect; }
 float4 GetWindowRect() { return u_window_rect; }
 float GetTime() { return u_time; }
+float GetFrame() { return u_frame; }
 
 // Interface wrappers - provided for compatibility.
 float4 Sample() { return SampleInput(COLOR_BUFFER_INPUT_INDEX); }
@@ -2266,6 +2268,7 @@ void PostProcessor::GetUniformBufferShaderSource(API_TYPE api, const PostProcess
 		"\tfloat4 u_viewport_rect;\n"
 		"\tfloat4 u_window_rect;\n"
 		"\tfloat u_time;\n"
+		"\tfloat u_frame;\n"
 		"\tfloat u_src_layer;\n"
 		"\tfloat u_native_gamma;\n"
 		"\tuint u_scaling_filter;\n"
@@ -2513,11 +2516,12 @@ bool  PostProcessor::UpdateConstantUniformBuffer(
 	m_new_constants[constant_idx] = temp;
 	constant_idx++;
 
-	// float time, float layer
+	// float time, float frame, float layer
 	temp.float_constant[0] = float(double(m_timer.GetTimeDifference()) / 1000.0);
-	temp.float_constant[1] = float(std::max(src_layer, 0));
-	temp.float_constant[2] = gamma;
-	temp.int_constant[3] = (src_rect.GetWidth() > dst_rect.GetWidth() && dst_rect.GetHeight() > dst_rect.GetHeight() && g_ActiveConfig.bUseScalingFilter) ? 1u : 0;
+	temp.float_constant[1] = float(Movie::GetCurrentFrame());
+	temp.float_constant[2] = float(std::max(src_layer, 0));
+	temp.float_constant[3] = gamma;
+	temp.int_constant[4] = (src_rect.GetWidth() > dst_rect.GetWidth() && dst_rect.GetHeight() > dst_rect.GetHeight() && g_ActiveConfig.bUseScalingFilter) ? 1u : 0;
 	m_new_constants[constant_idx] = temp;
 	constant_idx++;
 
